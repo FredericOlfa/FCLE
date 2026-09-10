@@ -101,5 +101,6 @@ class NoneSmtp():
 
 
 if __name__ == "__main__":
-    smtp = Smtp('smtp.gmail.com', 587, 'fredthxdev@gmail.com', "555dcfg8***")
-    smtp.send('fredthx@gmail.com', "Essai", "C'est juste un test","../hotfolder/888.txt")
+    from default import smtp_host, smtp_port, smtp_sender, smtp_recipient
+    smtp = Smtp(smtp_host, smtp_port)
+    smtp.send(smtp_sender, "Essai", "C'est juste un test")
