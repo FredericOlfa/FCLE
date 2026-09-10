@@ -119,10 +119,11 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--interval', type=int, default=60, help="Intervalle entre chaque vérification en secondes (défaut: 10)")
     
     # Configuration SMTP via la CLI
-    parser.add_argument('--smtp-host', default='smtp-mutualise.hexanet.fr', help="Serveur SMTP")
-    parser.add_argument('--smtp-port', type=int, default=587, help="Port SMTP (défaut: 587)")
-    parser.add_argument('--smtp-sender', default='noreply@olfa.fr', help="Adresse de l'expéditeur")
-    parser.add_argument('--smtp-recipient', default='frederic.thome@olfa.fr', help="Adresse du destinataire")
+    from default import smtp_host, smtp_port, smtp_sender, smtp_recipient
+    parser.add_argument('--smtp-host', default=smtp_host, help="Serveur SMTP")
+    parser.add_argument('--smtp-port', type=int, default=smtp_port, help="Port SMTP (défaut: 587)")
+    parser.add_argument('--smtp-sender', default=smtp_sender, help="Adresse de l'expéditeur")
+    parser.add_argument('--smtp-recipient', default=smtp_recipient, help="Adresse du destinataire")
 
     args = parser.parse_args()
 
