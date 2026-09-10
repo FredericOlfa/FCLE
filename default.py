@@ -1,4 +1,4 @@
-smtp_host='smtp-mutualise.hexanet.fr'
+smtp_host='my_smtp_server.com'
 smtp_port=587
-smtp_sender='noreply@olfa.fr'
-smtp_recipient='frederic.thome@olfa.fr'
+smtp_sender='noreply@my_domain.com'
+smtp_recipient='alerte@my_domain.com'
