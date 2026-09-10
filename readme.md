@@ -12,6 +12,9 @@ if errors:
     smtp.send('toto@gmail.com', 'Errors founds','\n'.join(errors))
 #vérification continue
 checker.run(interval = 10, callback = lambda errors:print(errors))
+#alternative
+for errors in checker.gen_check(30):
+    print(errors)
 ```
 
 Ou en ligne de commande
