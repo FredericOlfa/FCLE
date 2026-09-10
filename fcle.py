@@ -1,6 +1,7 @@
 import os
 import re
 import hashlib
+import argparse
 
 class FCLE:
     def __init__(self, log_files, pattern):
@@ -81,7 +82,7 @@ class FCLE:
 
         return found_errors
 
-    def gen_check(self, interval = 60):
+    def gen_check(self, interval=60):
         """Génère un itérateur qui vérifie les fichiers de log à intervalles réguliers.
         param interval: Intervalle en secondes entre chaque vérification.
         """
@@ -92,7 +93,7 @@ class FCLE:
                 yield errors
             time.sleep(interval)
 
-    def run(self, interval = 60, callback = None):
+    def run(self, interval=60, callback=None):
         """Exécute la vérification des fichiers de log à intervalles réguliers.
         param interval: Intervalle en secondes entre chaque vérification.
         param callback: Fonction à appeler avec les erreurs trouvées.
@@ -104,21 +105,37 @@ class FCLE:
                 print("Erreurs trouvées :")
                 for error in errors:
                     print(error)
-        
+
 
 if __name__ == '__main__':
-    # Exemple d'utilisation
-    log_files = ['example.log']  # Remplacez par vos fichiers de log
-    pattern = r'ERROR|CRITICAL'  # Remplacez par votre motif de recherche
+    parser = argparse.ArgumentParser(description="Analyse des fichiers de log en continu et envoie d'alertes SMTP.")
+    
+    # Arguments obligatoires
+    parser.add_argument('logs', nargs='+', help="Liste des fichiers de log à surveiller (ex: app.log web.log)")
+    
+    # Options optionnelles avec valeurs par défaut
+    parser.add_argument('-p', '--pattern', default=r'ERROR|CRITICAL', help="Motif Regex à rechercher (défaut: 'ERROR|CRITICAL')")
+    parser.add_argument('-i', '--interval', type=int, default=60, help="Intervalle entre chaque vérification en secondes (défaut: 60)")
+    
+    # Configuration SMTP via la CLI
+    parser.add_argument('--smtp-host', default='smtp-mutualise.hexanet.fr', help="Serveur SMTP")
+    parser.add_argument('--smtp-port', type=int, default=587, help="Port SMTP (défaut: 587)")
+    parser.add_argument('--smtp-sender', default='noreply@olfa.fr', help="Adresse de l'expéditeur")
+    parser.add_argument('--smtp-recipient', default='frederic.thome@olfa.fr', help="Adresse du destinataire")
 
-    fcle = FCLE(log_files, pattern)
+    args = parser.parse_args()
 
+    # Initialisation de la classe FCLE
+    fcle = FCLE(args.logs, args.pattern)
+
+    # Import du module SMTP local
     from smtp import Smtp
-    smtp = Smtp('smtp-mutualise.hexanet.fr',587,'noreply@olfa.fr', starttls = True)
+    smtp = Smtp(args.smtp_host, args.smtp_port, args.smtp_sender, starttls=True)
 
     def on_error_found(errors):
         subject = "Erreurs détectées dans les fichiers de log"
         body = "\n".join(errors)
-        smtp.send('frederic.thome@olfa.fr', subject, body)
+        smtp.send(args.smtp_recipient, subject, body)
 
-    fcle.run(interval=10, callback=on_error_found)  # Vérifie toutes les 10 secondes
+    # Lancement du scanner
+    fcle.run(interval=args.interval, callback=on_error_found)
