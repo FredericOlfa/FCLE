@@ -1,5 +1,4 @@
-# Configuration SMTP par default
-smtp-host='my_smtp_server.com'
-smtp-port=587
-smtp-sender='noreply@my_domain.com'
-smtp-recipient='alerte@my_domain.com'
+smtp_host='smtp-mutualise.hexanet.fr'
+smtp_port=587
+smtp_sender='noreply@olfa.fr'
+smtp_recipient='frederic.thome@olfa.fr'
