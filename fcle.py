@@ -110,12 +110,13 @@ class FCLE:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Analyse des fichiers de log en continu et envoie d'alertes SMTP.")
     
-    # Arguments obligatoires
-    parser.add_argument('logs', nargs='+', help="Liste des fichiers de log à surveiller (ex: app.log web.log)")
+    # Fichiers spécifiés directement ou via un fichier de liste
+    parser.add_argument('logs', nargs='*', help="Liste des fichiers de log à surveiller en ligne de commande")
+    parser.add_argument('-f', '--log-list', help="Fichier texte contenant la liste des fichiers log (un par ligne)")
     
     # Options optionnelles avec valeurs par défaut
     parser.add_argument('-p', '--pattern', default=r'ERROR|CRITICAL', help="Motif Regex à rechercher (défaut: 'ERROR|CRITICAL')")
-    parser.add_argument('-i', '--interval', type=int, default=60, help="Intervalle entre chaque vérification en secondes (défaut: 60)")
+    parser.add_argument('-i', '--interval', type=int, default=60, help="Intervalle entre chaque vérification en secondes (défaut: 10)")
     
     # Configuration SMTP via la CLI
     parser.add_argument('--smtp-host', default='smtp-mutualise.hexanet.fr', help="Serveur SMTP")
@@ -125,17 +126,40 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Reconstruction de la liste globale des fichiers de log
+    target_logs = list(args.logs) if args.logs else []
+
+    if args.log_list:
+        if os.path.exists(args.log_list):
+            with open(args.log_list, 'r', encoding='utf-8') as f:
+                for line in f:
+                    path = line.strip()
+                    # Ignore les lignes vides et les commentaires (commençant par #)
+                    if path and not path.startswith('#'):
+                        target_logs.append(path)
+        else:
+            print(f"Erreur : Le fichier de liste '{args.log_list}' n'existe pas.")
+
+    if not target_logs:
+        parser.error("Vous devez spécifier au moins un fichier log en argument ou via --log-list (-f).")
+
     # Initialisation de la classe FCLE
-    fcle = FCLE(args.logs, args.pattern)
+    fcle = FCLE(target_logs, args.pattern)
 
     # Import du module SMTP local
-    from smtp import Smtp
-    smtp = Smtp(args.smtp_host, args.smtp_port, args.smtp_sender, starttls=True)
+    try:
+        from smtp import Smtp
+        smtp = Smtp(args.smtp_host, args.smtp_port, args.smtp_sender, starttls=True)
 
-    def on_error_found(errors):
-        subject = "Erreurs détectées dans les fichiers de log"
-        body = "\n".join(errors)
-        smtp.send(args.smtp_recipient, subject, body)
+        def on_error_found(errors):
+            subject = "Erreurs détectées dans les fichiers de log"
+            body = "\n".join(errors)
+            smtp.send(args.smtp_recipient, subject, body)
+
+        callback_func = on_error_found
+    except ImportError:
+        print("Module 'smtp' introuvable. Les erreurs seront affichées sur la sortie standard.")
+        callback_func = None
 
     # Lancement du scanner
-    fcle.run(interval=args.interval, callback=on_error_found)
+    fcle.run(interval=args.interval, callback=callback_func)

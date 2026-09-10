@@ -16,8 +16,25 @@ checker.run(interval = 10, callback = lambda errors:print(errors))
 
 Ou en ligne de commande
 
-python script.py log1.log log2.log -i 5 -p "EXCEPTION|FATAL|CRITICAL" \
+```
+python fcle.py log1.log log2.log -i 5 -p "EXCEPTION|FATAL|CRITICAL" \
     --smtp-recipient "tech@olfa.fr" \
     --smtp-host "smpt.olfa.fr" \
     --smtp-port 587 \
     --smtp-sender "alertes@olfa.fr"
+```
+
+On peut aussi mettre les fichiers log dans un fichier txt:
+
+```
+python fcle.py logs_files.txt -i 30
+```
+avec logs
+```
+# Fichiers de log du serveur Web
+/var/log/nginx/access.log
+/var/log/nginx/error.log
+
+# Fichiers applicatifs
+app_prod.log
+```
